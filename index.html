@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatore Diametro Tubazione</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1f2436;
+    --border: #2a3048;
+    --accent: #4fc3f7;
+    --accent2: #81d4fa;
+    --ok: #4caf50;
+    --warn: #ff9800;
+    --err: #ef5350;
+    --text: #e8eaf6;
+    --text2: #9fa8da;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header { text-align: center; margin-bottom: 36px; }
+  header h1 {
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  header p { font-size: 0.8rem; color: var(--text2); margin-top: 6px; font-family: var(--mono); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .card h2 {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text2);
+    margin-bottom: 5px;
+    font-family: var(--mono);
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field select option { background: var(--surface2); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ─── SEZIONE ξ ─── */
+  .xi-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .xi-panel h2 {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .xi-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 720px) { .xi-cols { grid-template-columns: 1fr; } }
+
+  .xi-col-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .xi-row {
+    display: grid;
+    grid-template-columns: 1fr auto 80px auto;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 7px;
+  }
+  .xi-row select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 5px 7px;
+    outline: none;
+  }
+  .xi-row select:focus { border-color: var(--accent); }
+  .xi-row .xi-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 5px 8px;
+    text-align: center;
+    min-width: 52px;
+    white-space: nowrap;
+  }
+  .xi-row input[type=number] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 5px 7px;
+    outline: none;
+    width: 100%;
+  }
+  .xi-row input[type=number]:focus { border-color: var(--accent); }
+  .btn-del {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--err);
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    transition: background 0.15s;
+  }
+  .btn-del:hover { background: rgba(239,83,80,0.12); }
+
+  .btn-add {
+    width: 100%;
+    margin-top: 8px;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    padding: 7px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  .xi-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--text2);
+  }
+  .xi-total-val {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    color: var(--accent);
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  /* ─── RESULTS ─── */
+  .results-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .results-panel h2 {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  .verdict {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: 0.04em;
+    transition: all 0.3s;
+  }
+  .verdict.ok   { background: rgba(76,175,80,0.12); border: 1px solid var(--ok);   color: var(--ok);   }
+  .verdict.warn { background: rgba(255,152,0,0.12); border: 1px solid var(--warn); color: var(--warn); }
+  .verdict.err  { background: rgba(239,83,80,0.12);  border: 1px solid var(--err);  color: var(--err);  }
+  .verdict.idle { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .metric {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .metric .label { font-size: 0.68rem; color: var(--text2); font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .metric .value { font-size: 1.2rem; font-family: var(--mono); font-weight: 600; color: var(--text); }
+  .metric .unit  { font-size: 0.7rem; color: var(--text2); margin-left: 4px; }
+  .metric .bar-wrap { margin-top: 6px; background: var(--border); border-radius: 2px; height: 4px; overflow: hidden; }
+  .metric .bar { height: 100%; border-radius: 2px; transition: width 0.4s, background 0.3s; }
+
+  .detail-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.78rem; }
+  .detail-table th { text-align: left; padding: 6px 10px; color: var(--text2); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); }
+  .detail-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .detail-table tr:last-child td { border-bottom: none; }
+
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 0.68rem; font-weight: 600; font-family: var(--mono); }
+  .tag.ok   { background: rgba(76,175,80,0.2);  color: var(--ok);  }
+  .tag.warn { background: rgba(255,152,0,0.2);  color: var(--warn);}
+  .tag.err  { background: rgba(239,83,80,0.2);   color: var(--err); }
+
+  .note-box {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.7;
+    font-family: var(--mono);
+    margin-top: 16px;
+    display: none;
+  }
+
+  .btn-calc {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0e1a;
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 5px;
+    padding: 13px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-calc:hover { background: var(--accent2); }
+  .btn-calc:active { transform: scale(0.98); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Calcolatore Dimensionamento Tubazione</h1>
+  <p>Verifica portata · velocità · perdite di carico · UNI 9182 / UNI EN 12828</p>
+</header>
+
+<div class="layout">
+
+  <!-- DATI TRATTO -->
+  <div class="card">
+    <h2>📐 Dati del tratto</h2>
+    <div class="field">
+      <label>Potenza richiesta Q (W)</label>
+      <input type="number" id="potenza" value="6500" min="0" step="100">
+    </div>
+    <div class="row2">
+      <div class="field"><label>T mandata (°C)</label><input type="number" id="t_mandata" value="50" step="1"></div>
+      <div class="field"><label>T ritorno (°C)</label><input type="number" id="t_ritorno" value="40" step="1"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Lung. mandata (m)</label><input type="number" id="lung_mand" value="10" min="0" step="0.5"></div>
+      <div class="field"><label>Lung. ritorno (m)</label><input type="number" id="lung_rit" value="10" min="0" step="0.5"></div>
+    </div>
+    <div class="field">
+      <label>Fluido</label>
+      <select id="fluido">
+        <option value="acqua">Acqua</option>
+        <option value="glicol30">Acqua + glicol 30%</option>
+        <option value="glicol40">Acqua + glicol 40%</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Tipo di impianto</label>
+      <select id="tipo_imp">
+        <option value="riscaldamento">Riscaldamento</option>
+        <option value="raffrescamento">Raffrescamento / Chiller</option>
+        <option value="sanitario">Acqua sanitaria</option>
+        <option value="biomassa">Teleriscaldamento / Biomassa</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- MATERIALE E DIAMETRO -->
+  <div class="card">
+    <h2>🔧 Materiale e diametro</h2>
+    <div class="field">
+      <label>Materiale tubo</label>
+      <select id="materiale" onchange="aggiornaTaglie()">
+        <option value="Multistrato">Multistrato (PE-X/Al/PE-X)</option>
+        <option value="Rame">Rame (EN 1057)</option>
+        <option value="PP">PP-R (polipropilene)</option>
+        <option value="Pead">PEAD (polietilene HD)</option>
+        <option value="Acciaio">Acciaio nero (grezzo/saldato)</option>
+        <option value="AcciaioZincato">Acciaio zincato / galvanizzato</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Diametro nominale</label>
+      <select id="diametro_nom" onchange="aggiornaDiamInt()"></select>
+    </div>
+    <div class="field">
+      <label>Diametro interno (mm)</label>
+      <input type="number" id="diam_int" step="0.1" readonly style="opacity:0.7;cursor:not-allowed;">
+    </div>
+    <div class="field">
+      <label>Rugosità assoluta ε (mm)</label>
+      <input type="number" id="rugosita" step="0.001" min="0.001">
+    </div>
+    <button class="btn-calc" onclick="calcola()">▶ CALCOLA</button>
+  </div>
+
+  <!-- SEZIONE ξ CURVE -->
+  <div class="xi-panel">
+    <h2>
+      <span>〰 Perdite localizzate — Coefficienti ξ</span>
+      <span style="color:var(--text2);font-size:0.65rem;font-weight:400">Il totale ξ viene usato automaticamente nel calcolo</span>
+    </h2>
+    <div class="xi-cols">
+
+      <!-- CURVE / RACCORDI -->
+      <div>
+        <div class="xi-col-label">Curve e raccordi</div>
+        <div id="rows-curve"></div>
+        <button class="btn-add" onclick="addRow('curve')">+ Aggiungi curva / raccordo</button>
+        <div class="xi-total-row">
+          <span>ξ totale curve</span>
+          <div class="xi-total-val" id="tot-curve">0.0</div>
+        </div>
+      </div>
+
+      <!-- VALVOLE / COMPONENTI -->
+      <div>
+        <div class="xi-col-label">Valvole e componenti</div>
+        <div id="rows-valvole"></div>
+        <button class="btn-add" onclick="addRow('valvole')">+ Aggiungi valvola / componente</button>
+        <div class="xi-total-row">
+          <span>ξ totale valvole</span>
+          <div class="xi-total-val" id="tot-valvole">0.0</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TOTALE GLOBALE -->
+    <div class="xi-total-row" style="margin-top:18px;border-top:1px solid var(--accent);padding-top:14px;">
+      <span style="color:var(--text);font-weight:500">ξ TOTALE TRATTO</span>
+      <div class="xi-total-val" style="font-size:1.3rem;border-color:var(--accent2);color:var(--accent2)" id="tot-globale">0.0</div>
+    </div>
+  </div>
+
+  <!-- RISULTATI -->
+  <div class="results-panel">
+    <h2>📊 Risultati e verifica</h2>
+
+    <div class="verdict idle" id="verdict">
+      <span style="font-size:1.4rem">◈</span>
+      <span id="verdict-text">Inserire i dati e premere Calcola</span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="label">Portata G</div>
+        <div class="value"><span id="r_portata_lh">—</span><span class="unit">l/h</span></div>
+        <div class="bar-wrap"><div class="bar" id="b_portata" style="width:0%;background:var(--accent)"></div></div>
+      </div>
+      <div class="metric">
+        <div class="label">Velocità media</div>
+        <div class="value"><span id="r_vel">—</span><span class="unit">m/s</span></div>
+        <div class="bar-wrap"><div class="bar" id="b_vel" style="width:0%;background:var(--ok)"></div></div>
+      </div>
+      <div class="metric">
+        <div class="label">ΔP specifica</div>
+        <div class="value"><span id="r_dp_spec">—</span><span class="unit">Pa/m</span></div>
+        <div class="bar-wrap"><div class="bar" id="b_dp" style="width:0%;background:var(--ok)"></div></div>
+      </div>
+      <div class="metric">
+        <div class="label">ΔP tratto totale</div>
+        <div class="value"><span id="r_dp_tot">—</span><span class="unit">kPa</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">N° Reynolds</div>
+        <div class="value"><span id="r_re">—</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">ξ totale usato</div>
+        <div class="value"><span id="r_xi_tot">—</span></div>
+      </div>
+    </div>
+
+    <table class="detail-table">
+      <thead><tr><th>Parametro</th><th>Valore</th><th>Limite normativo</th><th>Stato</th></tr></thead>
+      <tbody id="detail-tbody"></tbody>
+    </table>
+    <div class="note-box" id="note-box"></div>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATABASE MATERIALI
+// ═══════════════════════════════════════════════════════════════
+const TUBI = {
+  Multistrato: [
+    { dn:"14×2",   di:10.0, k:0.007 },{ dn:"16×2",   di:12.0, k:0.007 },
+    { dn:"18×2",   di:14.0, k:0.007 },{ dn:"20×2",   di:16.0, k:0.007 },
+    { dn:"26×3",   di:20.0, k:0.007 },{ dn:"32×3",   di:26.0, k:0.007 },
+    { dn:"40×4",   di:32.0, k:0.007 },{ dn:"50×4,5", di:41.0, k:0.007 },
+    { dn:"63×6",   di:51.0, k:0.007 },
+  ],
+  Rame: [
+    { dn:"Ø10", di:8.0,  k:0.0015 },{ dn:"Ø12", di:10.0, k:0.0015 },
+    { dn:"Ø14", di:12.0, k:0.0015 },{ dn:"Ø16", di:14.0, k:0.0015 },
+    { dn:"Ø18", di:16.0, k:0.0015 },{ dn:"Ø22", di:20.0, k:0.0015 },
+    { dn:"Ø28", di:25.0, k:0.0015 },{ dn:"Ø35", di:32.0, k:0.0015 },
+    { dn:"Ø42", di:39.0, k:0.0015 },
+  ],
+  PP: [
+    { dn:"20",  di:16.6, k:0.007 },{ dn:"25",  di:21.2, k:0.007 },
+    { dn:"32",  di:26.6, k:0.007 },{ dn:"40",  di:33.2, k:0.007 },
+    { dn:"50",  di:42.0, k:0.007 },{ dn:"63",  di:54.2, k:0.007 },
+    { dn:"75",  di:65.0, k:0.007 },{ dn:"90",  di:79.2, k:0.007 },
+    { dn:"110", di:96.8, k:0.007 },
+  ],
+  Pead: [
+    { dn:"20",  di:16.2, k:0.007 },{ dn:"25",  di:21.2, k:0.007 },
+    { dn:"32",  di:28.0, k:0.007 },{ dn:"40",  di:35.2, k:0.007 },
+    { dn:"50",  di:44.0, k:0.007 },{ dn:"63",  di:55.4, k:0.007 },
+    { dn:"75",  di:66.0, k:0.007 },{ dn:"90",  di:79.2, k:0.007 },
+    { dn:"110", di:96.8, k:0.007 },
+  ],
+  Acciaio: [
+    { dn:'1/8"',   di:6.0,   k:0.046 },{ dn:'1/4"',   di:8.0,   k:0.046 },
+    { dn:'3/8"',   di:10.0,  k:0.046 },{ dn:'1/2"',   di:15.0,  k:0.046 },
+    { dn:'3/4"',   di:20.0,  k:0.046 },{ dn:'1"',     di:25.0,  k:0.046 },
+    { dn:'1"1/4',  di:32.0,  k:0.046 },{ dn:'1"1/2',  di:40.0,  k:0.046 },
+    { dn:'2"',     di:50.0,  k:0.046 },{ dn:'2"1/2',  di:65.0,  k:0.046 },
+    { dn:'3"',     di:80.0,  k:0.046 },{ dn:'4"',     di:100.0, k:0.046 },
+  ],
+  AcciaioZincato: [
+    { dn:'1/8"',   di:6.0,   k:0.035 },{ dn:'1/4"',   di:8.0,   k:0.035 },
+    { dn:'3/8"',   di:10.0,  k:0.035 },{ dn:'1/2"',   di:15.0,  k:0.035 },
+    { dn:'3/4"',   di:20.0,  k:0.035 },{ dn:'1"',     di:25.0,  k:0.035 },
+    { dn:'1"1/4',  di:32.0,  k:0.035 },{ dn:'1"1/2',  di:40.0,  k:0.035 },
+    { dn:'2"',     di:50.0,  k:0.035 },{ dn:'2"1/2',  di:65.0,  k:0.035 },
+    { dn:'3"',     di:80.0,  k:0.035 },{ dn:'4"',     di:100.0, k:0.035 },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATABASE ξ — dal foglio "Perdite di carico"
+// ═══════════════════════════════════════════════════════════════
+const XI_CURVE = [
+  { label: 'Curva stretta 90°',   xi: 2.0 },
+  { label: 'Curva normale 90°',   xi: 1.5 },
+  { label: 'Curva larga 90°',     xi: 1.0 },
+  { label: 'Allargamento',        xi: 1.0 },
+  { label: 'Restringimento',      xi: 0.5 },
+  { label: 'Raccordo a T (deviazione)', xi: 1.5 },
+  { label: 'Raccordo a T (passante)',   xi: 0.5 },
+  { label: 'Collettore semplice', xi: 2.0 },
+  { label: 'Passaggio caldaia',   xi: 3.0 },
+];
+
+const XI_VALVOLE = [
+  { label: 'Valvola intercettazione dritta',  xi: 10.0 },
+  { label: 'Saracinesca (aperta)',             xi: 0.2  },
+  { label: 'Valvola a farfalla',               xi: 3.5  },
+  { label: 'Valvola a ritegno',                xi: 3.0  },
+  { label: 'Valvola a 3 vie',                  xi: 10.0 },
+  { label: 'Valvola corpo scaldante dritta',   xi: 8.5  },
+  { label: 'Valvola corpo scaldante a squadra',xi: 4.0  },
+  { label: 'Detentore dritto',                 xi: 1.5  },
+  { label: 'Detentore a 90°',                  xi: 1.0  },
+  { label: 'Kv collettore (da kPa/Q²)',        xi: 0.0  },  // per inserimento manuale
+];
+
+// Contatori per ID unici
+let rowId = 0;
+
+function addRow(tipo) {
+  const containerId = tipo === 'curve' ? 'rows-curve' : 'rows-valvole';
+  const catalog     = tipo === 'curve' ? XI_CURVE : XI_VALVOLE;
+  const container   = document.getElementById(containerId);
+  const id          = ++rowId;
+
+  const div = document.createElement('div');
+  div.className = 'xi-row';
+  div.id = 'xirow-' + id;
+
+  // Opzioni select
+  const opts = catalog.map((c,i) =>
+    `<option value="${c.xi}" data-idx="${i}">${c.label}</option>`
+  ).join('');
+
+  div.innerHTML = `
+    <select onchange="onChangeTipo(${id}, this)" style="grid-column:1">
+      ${opts}
+    </select>
+    <span class="xi-badge" id="badge-${id}">ξ = ${catalog[0].xi.toFixed(1)}</span>
+    <input type="number" id="qty-${id}" value="1" min="1" max="99" step="1"
+           style="text-align:center" oninput="aggiornaXiTotali()" title="Quantità">
+    <button class="btn-del" onclick="delRow(${id})" title="Rimuovi">✕</button>
+  `;
+
+  // Salva il tipo sul div per distinguere curve/valvole al ricalcolo
+  div.dataset.tipo = tipo;
+  div.dataset.xi   = catalog[0].xi;
+
+  container.appendChild(div);
+  aggiornaXiTotali();
+}
+
+function onChangeTipo(id, sel) {
+  const xi = parseFloat(sel.value);
+  document.getElementById('badge-' + id).textContent = 'ξ = ' + xi.toFixed(1);
+  document.getElementById('xirow-' + id).dataset.xi = xi;
+  aggiornaXiTotali();
+}
+
+function delRow(id) {
+  const el = document.getElementById('xirow-' + id);
+  if (el) el.remove();
+  aggiornaXiTotali();
+}
+
+function aggiornaXiTotali() {
+  let totC = 0, totV = 0;
+  document.querySelectorAll('.xi-row').forEach(row => {
+    const xi  = parseFloat(row.dataset.xi) || 0;
+    const qtyEl = row.querySelector('input[type=number]');
+    const qty = qtyEl ? (parseInt(qtyEl.value) || 0) : 0;
+    if (row.dataset.tipo === 'curve')   totC += xi * qty;
+    else                                totV += xi * qty;
+  });
+  document.getElementById('tot-curve').textContent   = totC.toFixed(2);
+  document.getElementById('tot-valvole').textContent = totV.toFixed(2);
+  document.getElementById('tot-globale').textContent = (totC + totV).toFixed(2);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATERIALI — init
+// ═══════════════════════════════════════════════════════════════
+const FLUIDI = {
+  acqua:    { rho: 988.4, mu: 0.590 },
+  glicol30: { rho: 1040,  mu: 1.2   },
+  glicol40: { rho: 1058,  mu: 1.8   },
+};
+const LIMITI = {
+  riscaldamento:  { vel_max: 1.5, vel_min: 0.2, dp_max: 200 },
+  raffrescamento: { vel_max: 1.5, vel_min: 0.2, dp_max: 200 },
+  sanitario:      { vel_max: 1.0, vel_min: 0.1, dp_max: 150 },
+  biomassa:       { vel_max: 2.0, vel_min: 0.3, dp_max: 300 },
+};
+
+function aggiornaTaglie() {
+  const mat = document.getElementById('materiale').value;
+  const sel = document.getElementById('diametro_nom');
+  sel.innerHTML = '';
+  TUBI[mat].forEach((t, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = t.dn + '  (Di = ' + t.di + ' mm)';
+    sel.appendChild(opt);
+  });
+  document.getElementById('rugosita').value = TUBI[mat][0].k;
+  aggiornaDiamInt();
+}
+
+function aggiornaDiamInt() {
+  const mat = document.getElementById('materiale').value;
+  const idx = parseInt(document.getElementById('diametro_nom').value);
+  const t = TUBI[mat][idx];
+  document.getElementById('diam_int').value = t.di;
+  document.getElementById('rugosita').value = t.k;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CALCOLO PRINCIPALE
+// ═══════════════════════════════════════════════════════════════
+function calcola() {
+  const Q_W = parseFloat(document.getElementById('potenza').value);
+  const T_m = parseFloat(document.getElementById('t_mandata').value);
+  const T_r = parseFloat(document.getElementById('t_ritorno').value);
+  const Lm  = parseFloat(document.getElementById('lung_mand').value);
+  const Lr  = parseFloat(document.getElementById('lung_rit').value);
+  const L   = Lm + Lr;
+
+  const fluido_key = document.getElementById('fluido').value;
+  const tipo_imp   = document.getElementById('tipo_imp').value;
+  const mat        = document.getElementById('materiale').value;
+  const idx        = parseInt(document.getElementById('diametro_nom').value);
+  const Di_mm      = parseFloat(document.getElementById('diam_int').value);
+  const k_mm       = parseFloat(document.getElementById('rugosita').value);
+
+  // Legge ξ dalla sezione interattiva
+  const xi_tot = parseFloat(document.getElementById('tot-globale').textContent) || 0;
+
+  const { rho, mu } = FLUIDI[fluido_key];
+  const lim = LIMITI[tipo_imp];
+
+  const deltaT = Math.abs(T_m - T_r);
+  if (deltaT < 0.5) { alert('ΔT troppo piccolo. Verificare temperature.'); return; }
+
+  const cp    = fluido_key === 'acqua' ? 4186 : fluido_key === 'glicol30' ? 3800 : 3600;
+  const G_kgs = Q_W / (cp * deltaT);
+  const G_lh  = G_kgs / rho * 1000 * 3600;
+  const G_m3s = G_kgs / rho;
+
+  const Di_m = Di_mm / 1000;
+  const A    = Math.PI * Di_m * Di_m / 4;
+  const v    = G_m3s / A;
+
+  const mu_pas = mu / 1000;
+  const Re     = rho * v * Di_m / mu_pas;
+
+  const k_m = k_mm / 1000;
+  let f;
+  if (Re < 2300) {
+    f = 64 / Re;
+  } else {
+    const kD = k_m / Di_m;
+    f = 0.25 / Math.pow(Math.log10(kD / 3.7 + 5.74 / Math.pow(Re, 0.9)), 2);
+  }
+
+  const dp_spec_pa_m = f * (rho * v * v / 2) / Di_m;
+  const dp_dist_pa   = dp_spec_pa_m * L;
+  const dp_loc_pa    = xi_tot * rho * v * v / 2;
+  const dp_tot_pa    = dp_dist_pa + dp_loc_pa;
+  const dp_tot_kpa   = dp_tot_pa / 1000;
+
+  const regime = Re < 2300 ? 'Laminare' : Re < 4000 ? 'Transizione' : 'Turbolento';
+
+  let stato_vel    = v < lim.vel_min ? 'warn' : v > lim.vel_max ? 'err' : 'ok';
+  let stato_dp     = dp_spec_pa_m > lim.dp_max ? 'err' : dp_spec_pa_m > lim.dp_max * 0.75 ? 'warn' : 'ok';
+  let stato_rumore = v > 1.5 ? 'warn' : 'ok';
+  const tutto_ok   = stato_vel === 'ok' && stato_dp === 'ok';
+
+  // Verdetto
+  const vd = document.getElementById('verdict');
+  const dnLabel = TUBI[mat][idx].dn;
+  if (tutto_ok) {
+    vd.className = 'verdict ok';
+    vd.innerHTML = `<span style="font-size:1.4rem">✔</span><span>${mat} ${dnLabel} — IDONEO per questo tratto</span>`;
+  } else if (stato_dp === 'err' || stato_vel === 'err') {
+    vd.className = 'verdict err';
+    vd.innerHTML = `<span style="font-size:1.4rem">✘</span><span>${mat} ${dnLabel} — NON IDONEO — cambio diametro necessario</span>`;
+  } else {
+    vd.className = 'verdict warn';
+    vd.innerHTML = `<span style="font-size:1.4rem">⚠</span><span>${mat} ${dnLabel} — ATTENZIONE — verificare i parametri</span>`;
+  }
+
+  // Metriche
+  document.getElementById('r_portata_lh').textContent = G_lh.toFixed(1);
+  document.getElementById('r_vel').textContent        = v.toFixed(3);
+  document.getElementById('r_dp_spec').textContent    = dp_spec_pa_m.toFixed(1);
+  document.getElementById('r_dp_tot').textContent     = dp_tot_kpa.toFixed(3);
+  document.getElementById('r_re').textContent         = Math.round(Re).toLocaleString('it-IT');
+  document.getElementById('r_xi_tot').textContent     = xi_tot.toFixed(2);
+
+  setBar('b_vel',     Math.min(v / lim.vel_max * 100, 120), stato_vel);
+  setBar('b_dp',      Math.min(dp_spec_pa_m / lim.dp_max * 100, 120), stato_dp);
+  setBar('b_portata', Math.min(G_lh / 5000 * 100, 100), 'ok');
+
+  // Tabella dettaglio
+  const rows = [
+    { param:'Velocità del fluido',           valore:v.toFixed(3)+' m/s',                         limite:`${lim.vel_min}–${lim.vel_max} m/s  (UNI 9182)`,        stato:stato_vel },
+    { param:'Perdita di carico specifica',   valore:dp_spec_pa_m.toFixed(1)+' Pa/m',             limite:`≤ ${lim.dp_max} Pa/m  (UNI 9182 / EN 12828)`,          stato:stato_dp  },
+    { param:'Numero di Reynolds / Regime',   valore:Math.round(Re).toLocaleString('it-IT')+' → '+regime, limite:'Re<2300 laminare',                             stato:Re<1000?'warn':'ok' },
+    { param:'Fattore di attrito f',          valore:'f = '+f.toFixed(4)+'  (Swamee-Jain)',        limite:'—',                                                    stato:'ok' },
+    { param:'Rugosità assoluta ε',           valore:k_mm.toFixed(4)+' mm   ε/D = '+(k_mm/Di_mm).toExponential(2), limite:'—',                                  stato:'ok' },
+    { param:'ξ totale tratto (curve+valv.)', valore:'ξ = '+xi_tot.toFixed(2),                    limite:'—',                                                    stato:'ok' },
+    { param:'ΔP distribuita',               valore:(dp_dist_pa/1000).toFixed(3)+' kPa',          limite:'—',                                                    stato:'ok' },
+    { param:'ΔP localizzate',               valore:(dp_loc_pa/1000).toFixed(3)+' kPa',           limite:'—',                                                    stato:'ok' },
+    { param:'ΔP TOTALE tratto',             valore:dp_tot_kpa.toFixed(3)+' kPa',                 limite:'—',                                                    stato:'ok' },
+    { param:'Rischio rumore',               valore:v>1.5?'⚠ Possibile (v > 1,5 m/s)':'Assente', limite:'v < 1,5 m/s  (UNI 9182)',                              stato:stato_rumore },
+  ];
+
+  const tbody = document.getElementById('detail-tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.param}</td><td style="font-weight:500">${r.valore}</td><td style="color:var(--text2)">${r.limite}</td><td><span class="tag ${r.stato}">${r.stato==='ok'?'OK':r.stato==='warn'?'ATTENZIONE':'NON OK'}</span></td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Note
+  let notes = [];
+  if (v > lim.vel_max) {
+    const di_sug = Di_mm * Math.sqrt(v / lim.vel_max);
+    notes.push(`→ Velocità elevata: serve Di ≥ ${di_sug.toFixed(1)} mm → valutare DN superiore.`);
+  }
+  if (v < lim.vel_min) notes.push(`→ Velocità troppo bassa: rischio sedimentazione. Valutare DN inferiore.`);
+  if (dp_spec_pa_m > lim.dp_max) notes.push(`→ ΔP specifica oltre limite: incrementare il diametro.`);
+  notes.push(`G = ${G_lh.toFixed(1)} l/h = ${(G_kgs*3600).toFixed(2)} kg/h  |  A = ${(A*1e6).toFixed(2)} mm²`);
+  notes.push(`f = ${f.toFixed(4)}  |  ε/D = ${(k_m/Di_m*1000).toFixed(4)}‰  |  Re = ${Math.round(Re).toLocaleString('it-IT')}`);
+  notes.push(`ΔP dist. = ${(dp_dist_pa/1000).toFixed(3)} kPa  +  ΔP loc. = ${(dp_loc_pa/1000).toFixed(3)} kPa  =  ${dp_tot_kpa.toFixed(3)} kPa totali`);
+
+  const nb = document.getElementById('note-box');
+  nb.style.display = 'block';
+  nb.innerHTML = notes.map(n => `<div>${n}</div>`).join('');
+}
+
+function setBar(id, pct, stato) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.width      = Math.min(pct,100)+'%';
+  el.style.background = stato==='ok' ? 'var(--ok)' : stato==='warn' ? 'var(--warn)' : 'var(--err)';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT — aggiungi una riga di default per ciascuna sezione
+// ═══════════════════════════════════════════════════════════════
+aggiornaTaglie();
+addRow('curve');
+addRow('valvole');
+</script>
+</body>
+</html>
