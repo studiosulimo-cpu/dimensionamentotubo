@@ -330,6 +330,138 @@
   }
   .btn-calc:hover { background: var(--accent2); }
   .btn-calc:active { transform: scale(0.98); }
+
+  /* ─── SEZIONE POMPA ─── */
+  .pump-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+  .pump-panel h2 {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pump-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .pump-inputs .field { margin-bottom: 0; }
+  .pump-inputs label { font-size: 0.72rem; }
+  .pump-inputs label .hint { color: var(--accent2); font-size: 0.62rem; }
+
+  .pump-op {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 4px 0 18px;
+  }
+  @media (max-width: 560px) { .pump-op { grid-template-columns: 1fr; } }
+  .pump-op .opbox {
+    background: linear-gradient(160deg, var(--surface2), #161b2b);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 18px;
+    text-align: center;
+  }
+  .pump-op .opbox .lbl {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .pump-op .opbox .big {
+    font-family: var(--mono);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .pump-op .opbox .sub {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+
+  .pump-suggest {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .pump-suggest .stitle {
+    color: var(--accent2);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .btn-pump {
+    width: 100%;
+    background: var(--surface2);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 12px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-pump:hover { background: rgba(79,195,247,0.12); }
+  .btn-pump:active { transform: scale(0.98); }
+
+  .pump-uplift {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .pump-uplift .chk {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+  .pump-uplift .chk input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    margin-top: 1px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pump-uplift .chk strong { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -487,6 +619,126 @@
       <tbody id="detail-tbody"></tbody>
     </table>
     <div class="note-box" id="note-box"></div>
+  </div>
+
+  <!-- DIMENSIONAMENTO POMPA -->
+  <div class="pump-panel">
+    <h2>
+      <span>⚙ Dimensionamento pompa / circolatore</span>
+      <span style="color:var(--text2);font-size:0.62rem;font-weight:400">Usa Q e ΔP del tratto critico calcolato sopra</span>
+    </h2>
+
+    <!-- SELETTORE MODALITÀ -->
+    <div class="field" style="max-width:520px;margin-bottom:14px">
+      <label>Metodo di calcolo della prevalenza</label>
+      <select id="p_mode" onchange="toggleMode();calcolaPompa()">
+        <option value="auto">Automatico — il tratto È l'anello critico (prevalenza = ΔP tratto)</option>
+        <option value="full">Esteso — somma componenti (generatore + terminale + valvole)</option>
+      </select>
+    </div>
+
+    <p id="pump-intro" style="font-family:var(--mono);font-size:0.72rem;color:var(--text2);line-height:1.6;margin-bottom:16px"></p>
+
+    <div class="pump-inputs">
+      <div class="field comp-field">
+        <label>Modello generatore / scambiatore</label>
+        <select id="p_gen_mod" onchange="setModello('gen');calcolaPompa()"></select>
+        <input type="number" id="p_gen" value="10" min="0" step="0.5" oninput="markCustom('gen');calcolaPompa()"
+               style="margin-top:6px" title="ΔP in kPa (modificabile da scheda tecnica)">
+        <label style="margin-top:3px;font-size:0.62rem">ΔP risultante <span class="hint">(kPa)</span></label>
+      </div>
+      <div class="field comp-field">
+        <label>Modello terminale più sfavorito</label>
+        <select id="p_term_mod" onchange="setModello('term');calcolaPompa()"></select>
+        <input type="number" id="p_term" value="10" min="0" step="0.5" oninput="markCustom('term');calcolaPompa()"
+               style="margin-top:6px" title="ΔP in kPa (modificabile da scheda tecnica)">
+        <label style="margin-top:3px;font-size:0.62rem">ΔP risultante <span class="hint">(kPa)</span></label>
+      </div>
+      <div class="field comp-field">
+        <label>ΔP valvole regolazione / bilanciamento <span class="hint">(kPa)</span></label>
+        <input type="number" id="p_valv" value="5" min="0" step="0.5" oninput="calcolaPompa()">
+      </div>
+      <div class="field">
+        <label>Margine di sicurezza <span class="hint">(%)</span></label>
+        <input type="number" id="p_marg" value="15" min="0" max="100" step="5" oninput="calcolaPompa()">
+      </div>
+      <div class="field">
+        <label>Tipo di circuito</label>
+        <select id="p_circ" onchange="toggleGeo();calcolaPompa()">
+          <option value="chiuso">Chiuso (riscald. / raffr.)</option>
+          <option value="aperto">Aperto (sollevamento / reintegro)</option>
+        </select>
+      </div>
+      <div class="field" id="geo_field" style="display:none">
+        <label>Dislivello geodetico H<sub>geo</sub> <span class="hint">(m)</span></label>
+        <input type="number" id="p_geo" value="0" min="0" step="0.5" oninput="calcolaPompa()">
+      </div>
+      <div class="field">
+        <label>Rendimento idraulico pompa η<sub>p</sub> <span class="hint">(%)</span></label>
+        <input type="number" id="p_eta" value="55" min="5" max="90" step="1" oninput="calcolaPompa()">
+      </div>
+      <div class="field">
+        <label>Rendimento motore η<sub>m</sub> <span class="hint">(%)</span></label>
+        <input type="number" id="p_etam" value="85" min="30" max="98" step="1" oninput="calcolaPompa()">
+      </div>
+    </div>
+
+    <!-- MAGGIORAZIONE +10% -->
+    <div class="pump-uplift">
+      <label class="chk">
+        <input type="checkbox" id="p_uplift" checked onchange="calcolaPompa()">
+        <span>Maggiorazione <strong>+10%</strong> sulla prevalenza — perdite non considerate (raccordi minori, sporcamento, tolleranze)</span>
+      </label>
+    </div>
+
+    <button class="btn-pump" onclick="calcolaPompa()">⚙ CALCOLA PUNTO DI LAVORO</button>
+
+    <!-- PUNTO DI LAVORO -->
+    <div class="pump-op">
+      <div class="opbox">
+        <div class="lbl">Portata di progetto Q</div>
+        <div class="big"><span id="po_q">—</span></div>
+        <div class="sub">m³/h &nbsp;·&nbsp; <span id="po_q_lmin">—</span> l/min &nbsp;·&nbsp; <span id="po_q_ls">—</span> l/s</div>
+      </div>
+      <div class="opbox">
+        <div class="lbl">Prevalenza richiesta H</div>
+        <div class="big"><span id="po_h">—</span></div>
+        <div class="sub">m c.a. &nbsp;·&nbsp; <span id="po_h_kpa">—</span> kPa &nbsp;·&nbsp; <span id="po_h_bar">—</span> bar</div>
+        <div class="sub" id="po_h_note" style="color:var(--accent2);margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- METRICHE POTENZA -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="label">Potenza idraulica P<sub>idr</sub></div>
+        <div class="value"><span id="po_pidr">—</span><span class="unit">W</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Potenza all'albero P<sub>2</sub></div>
+        <div class="value"><span id="po_palb">—</span><span class="unit">W</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Potenza elettrica assorbita P<sub>1</sub></div>
+        <div class="value"><span id="po_pel">—</span><span class="unit">W</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Rendimento globale η<sub>tot</sub></div>
+        <div class="value"><span id="po_etatot">—</span><span class="unit">%</span></div>
+      </div>
+    </div>
+
+    <!-- BREAKDOWN PREVALENZA -->
+    <table class="detail-table">
+      <thead><tr><th>Contributo alla prevalenza</th><th>Valore</th><th>Note</th></tr></thead>
+      <tbody id="pump-tbody"></tbody>
+    </table>
+
+    <!-- SUGGERIMENTO MACCHINA -->
+    <div class="pump-suggest" id="pump-suggest" style="display:none">
+      <span class="stitle">Classe di macchina suggerita</span>
+      <div id="pump-suggest-body"></div>
+    </div>
   </div>
 
 </div><!-- /layout -->
@@ -794,6 +1046,16 @@ function calcola() {
   const nb = document.getElementById('note-box');
   nb.style.display = 'block';
   nb.innerHTML = notes.map(n => `<div>${n}</div>`).join('');
+
+  // Salva lo stato del tratto per il dimensionamento pompa
+  STATO_TRATTO = {
+    G_m3s:      G_m3s,
+    G_lh:       G_lh,
+    dp_tot_kpa: dp_tot_kpa,
+    rho:        rho,
+    tipo_imp:   tipo_imp,
+  };
+  calcolaPompa();
 }
 
 function setBar(id, pct, stato) {
@@ -804,11 +1066,272 @@ function setBar(id, pct, stato) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// DIMENSIONAMENTO POMPA / CIRCOLATORE
+// ═══════════════════════════════════════════════════════════════
+let STATO_TRATTO = null;   // popolato da calcola()
+const G_ACC = 9.81;        // accelerazione di gravità
+
+// ── Database ΔP di riferimento progettuale (kPa, a portata nominale) ──
+// Valori tipici di buona pratica: il dato vincolante resta la scheda tecnica.
+const GENERATORI = [
+  { label: 'Personalizzato / da scheda tecnica', kpa: null },
+  { label: 'Caldaia a condensazione',            kpa: 20 },
+  { label: 'Caldaia tradizionale (ghisa/atm.)',  kpa: 8  },
+  { label: 'Caldaia a biomassa / cippato',       kpa: 18 },
+  { label: 'Pompa di calore (scamb. a piastre)', kpa: 35 },
+  { label: 'Gruppo frigo / chiller (evapor.)',   kpa: 40 },
+  { label: 'Scambiatore a piastre (sottost. TLR)', kpa: 30 },
+  { label: 'Accumulo inerziale / puffer',        kpa: 2  },
+];
+const TERMINALI = [
+  { label: 'Personalizzato / da scheda tecnica', kpa: null },
+  { label: 'Radiatore / corpo scaldante',        kpa: 2  },
+  { label: 'Ventilconvettore (fan-coil)',        kpa: 15 },
+  { label: 'Pannello radiante (anello+collett.)', kpa: 20 },
+  { label: 'Batteria UTA / aerotermo',           kpa: 30 },
+  { label: 'Scambiatore d\'utenza a piastre',    kpa: 30 },
+  { label: 'Pannelli a soffitto / travi',        kpa: 8  },
+];
+
+function populateModelli() {
+  const fill = (selId, arr) => {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '';
+    arr.forEach((m, i) => {
+      const o = document.createElement('option');
+      o.value = i;
+      o.textContent = m.label + (m.kpa != null ? '  (' + m.kpa + ' kPa)' : '');
+      sel.appendChild(o);
+    });
+  };
+  fill('p_gen_mod', GENERATORI);
+  fill('p_term_mod', TERMINALI);
+  // Default rappresentativi
+  document.getElementById('p_gen_mod').value  = 1; // Caldaia a condensazione
+  document.getElementById('p_term_mod').value = 2; // Ventilconvettore
+  setModello('gen');
+  setModello('term');
+}
+
+function setModello(tipo) {
+  const selId = tipo === 'gen' ? 'p_gen_mod' : 'p_term_mod';
+  const inpId = tipo === 'gen' ? 'p_gen' : 'p_term';
+  const arr   = tipo === 'gen' ? GENERATORI : TERMINALI;
+  const idx   = parseInt(document.getElementById(selId).value);
+  const kpa   = arr[idx] ? arr[idx].kpa : null;
+  if (kpa != null) document.getElementById(inpId).value = kpa;  // null = Personalizzato: non sovrascrive
+}
+
+function markCustom(tipo) {
+  // L'utente ha editato il valore a mano → porta il menu su "Personalizzato"
+  const selId = tipo === 'gen' ? 'p_gen_mod' : 'p_term_mod';
+  document.getElementById(selId).value = 0;
+}
+
+function toggleGeo() {
+  const aperto = document.getElementById('p_circ').value === 'aperto';
+  document.getElementById('geo_field').style.display = aperto ? 'block' : 'none';
+}
+
+function toggleMode() {
+  const mode = document.getElementById('p_mode').value;
+  const auto = (mode === 'auto');
+  // Nasconde/mostra i campi dei componenti aggiuntivi
+  document.querySelectorAll('.comp-field').forEach(el => {
+    el.style.display = auto ? 'none' : 'block';
+  });
+  // Testo introduttivo coerente con la modalità
+  const intro = document.getElementById('pump-intro');
+  if (auto) {
+    intro.innerHTML =
+      'Modalità <strong style="color:var(--text)">automatica</strong>: si assume che il tratto calcolato sopra sia '+
+      'l\'<strong style="color:var(--text)">anello più sfavorito</strong> e che la sua ΔP (distribuite + localizzate ξ) '+
+      'rappresenti l\'intera perdita resistiva del circuito. La prevalenza è derivata direttamente: '+
+      'H = ΔP<sub>tratto</sub> × (1 + margine). Verificare che scambiatore e terminale critico siano già '+
+      'inglobati nel tratto; in caso contrario usare la modalità <em>Esteso</em>.';
+  } else {
+    intro.innerHTML =
+      'Modalità <strong style="color:var(--text)">estesa</strong>: alle ΔP del tratto si sommano i contributi di '+
+      'generatore/scambiatore, terminale più sfavorito e organi di regolazione. I valori dei menu sono '+
+      '<strong style="color:var(--text)">riferimenti progettuali tipici</strong> a portata nominale, da confermare con la '+
+      'scheda tecnica (campo kPa editabile). Nei circuiti <strong style="color:var(--text)">chiusi</strong> il dislivello '+
+      'geodetico non entra nella prevalenza.';
+  }
+}
+
+function calcolaPompa() {
+  if (!STATO_TRATTO) {
+    document.getElementById('pump-suggest').style.display = 'block';
+    document.getElementById('pump-suggest').querySelector('.stitle').textContent = 'In attesa di calcolo';
+    document.getElementById('pump-suggest-body').textContent =
+      'Premere prima ▶ CALCOLA nel pannello tubazione per ottenere portata e ΔP del tratto.';
+    return;
+  }
+
+  const { G_m3s, G_lh, dp_tot_kpa, rho } = STATO_TRATTO;
+  const mode = document.getElementById('p_mode').value;
+  const auto = (mode === 'auto');
+
+  // ── Input pompa ──
+  // In modalità automatica i contributi dei componenti sono azzerati:
+  // il tratto È già l'intera resistenza dell'anello critico.
+  const dp_gen  = auto ? 0 : (parseFloat(document.getElementById('p_gen').value)  || 0);
+  const dp_term = auto ? 0 : (parseFloat(document.getElementById('p_term').value) || 0);
+  const dp_valv = auto ? 0 : (parseFloat(document.getElementById('p_valv').value) || 0);
+  const marg    = (parseFloat(document.getElementById('p_marg').value) || 0) / 100;
+  const tipoC   = document.getElementById('p_circ').value;
+  const Hgeo    = parseFloat(document.getElementById('p_geo').value)  || 0;
+  const eta_p   = Math.max((parseFloat(document.getElementById('p_eta').value)  || 55) / 100, 0.05);
+  const eta_m   = Math.max((parseFloat(document.getElementById('p_etam').value) || 85) / 100, 0.30);
+
+  // ── Prevalenza ──
+  // Somma dei contributi resistivi del circuito (anello critico)
+  const dp_res_kpa = dp_tot_kpa + dp_gen + dp_term + dp_valv;        // kPa, senza margine
+  const dp_circ_kpa = dp_res_kpa * (1 + marg);                       // kPa, con margine
+  const H_res_m = dp_circ_kpa * 1000 / (rho * G_ACC);                // m c.a. (sole perdite)
+
+  // Geodetico solo per circuito aperto
+  const H_geo_eff = (tipoC === 'aperto') ? Hgeo : 0;
+  const H_base_m  = H_res_m + H_geo_eff;                             // prevalenza prima della maggiorazione
+
+  // Maggiorazione +10% per perdite non considerate
+  const upliftOn  = document.getElementById('p_uplift').checked;
+  const uplift    = upliftOn ? 0.10 : 0;
+  const H_tot_m   = H_base_m * (1 + uplift);                         // prevalenza finale richiesta
+
+  // ΔP totale equivalente alla prevalenza (per la potenza) — usa la finale
+  const dp_pompa_pa  = H_tot_m * rho * G_ACC;                        // Pa
+  const dp_pompa_kpa = dp_pompa_pa / 1000;
+  const dp_base_kpa  = H_base_m * rho * G_ACC / 1000;
+
+  // ── Portate ──
+  const Q_m3h  = G_m3s * 3600;
+  const Q_lmin = G_lh / 60;
+  const Q_ls   = G_lh / 3600;
+
+  // ── Potenze ──
+  const P_idr   = G_m3s * dp_pompa_pa;          // W  (= ρ·g·Q·H)
+  const P_albero = P_idr / eta_p;               // W
+  const P_el    = P_idr / (eta_p * eta_m);      // W
+  const eta_tot = eta_p * eta_m * 100;          // %
+
+  // ── Output punto di lavoro ──
+  document.getElementById('po_q').textContent      = Q_m3h.toFixed(2);
+  document.getElementById('po_q_lmin').textContent = Q_lmin.toFixed(1);
+  document.getElementById('po_q_ls').textContent   = Q_ls.toFixed(3);
+  document.getElementById('po_h').textContent      = H_tot_m.toFixed(2);
+  document.getElementById('po_h_kpa').textContent  = dp_pompa_kpa.toFixed(1);
+  document.getElementById('po_h_bar').textContent  = (dp_pompa_kpa / 100).toFixed(3);
+
+  document.getElementById('po_pidr').textContent  = P_idr.toFixed(1);
+  document.getElementById('po_palb').textContent  = P_albero.toFixed(0);
+  document.getElementById('po_pel').textContent   = P_el.toFixed(0);
+  document.getElementById('po_etatot').textContent = eta_tot.toFixed(1);
+
+  // ── Tabella breakdown prevalenza ──
+  const kpaToM = (kpa) => (kpa * 1000 / (rho * G_ACC));
+  let prows;
+  if (auto) {
+    prows = [
+      { c:'ΔP tratto critico (= anello sfavorito)', v:dp_tot_kpa.toFixed(2)+' kPa  ·  '+kpaToM(dp_tot_kpa).toFixed(2)+' m', n:'Distribuite + localizzate ξ — assunta come resistenza totale' },
+      { c:'Margine di sicurezza (+'+(marg*100).toFixed(0)+'%)', v:'+'+(dp_tot_kpa*marg).toFixed(2)+' kPa', n:'Incertezze / invecchiamento rete' },
+      { c:'Dislivello geodetico H_geo',           v:(tipoC==='aperto'? Hgeo.toFixed(2)+' m' : '0 m (circuito chiuso)'),   n:tipoC==='aperto'?'Circuito aperto: incluso':'Si annulla nel circuito chiuso' },
+    ];
+  } else {
+    prows = [
+      { c:'ΔP tubazioni (tratto critico)',        v:dp_tot_kpa.toFixed(2)+' kPa  ·  '+kpaToM(dp_tot_kpa).toFixed(2)+' m', n:'Distribuite + localizzate ξ' },
+      { c:'ΔP generatore / scambiatore',          v:dp_gen.toFixed(2)+' kPa  ·  '+kpaToM(dp_gen).toFixed(2)+' m',         n:'Dato di targa' },
+      { c:'ΔP terminale più sfavorito',           v:dp_term.toFixed(2)+' kPa  ·  '+kpaToM(dp_term).toFixed(2)+' m',       n:'Radiatore / fan-coil / batteria' },
+      { c:'ΔP valvole regolazione / bilanciam.',  v:dp_valv.toFixed(2)+' kPa  ·  '+kpaToM(dp_valv).toFixed(2)+' m',       n:'Autorità valvola a 3 vie' },
+      { c:'Subtotale resistenze',                 v:dp_res_kpa.toFixed(2)+' kPa  ·  '+kpaToM(dp_res_kpa).toFixed(2)+' m', n:'Somma senza margine' },
+      { c:'Margine di sicurezza (+'+(marg*100).toFixed(0)+'%)', v:'+'+(dp_res_kpa*marg).toFixed(2)+' kPa', n:'Incertezze / invecchiamento rete' },
+      { c:'Dislivello geodetico H_geo',           v:(tipoC==='aperto'? Hgeo.toFixed(2)+' m' : '0 m (circuito chiuso)'),   n:tipoC==='aperto'?'Circuito aperto: incluso':'Si annulla nel circuito chiuso' },
+    ];
+  }
+  const ptb = document.getElementById('pump-tbody');
+  ptb.innerHTML = '';
+  prows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.c}</td><td style="font-weight:500">${r.v}</td><td style="color:var(--text2)">${r.n}</td>`;
+    ptb.appendChild(tr);
+  });
+
+  // Prevalenza base (prima della maggiorazione)
+  const trBase = document.createElement('tr');
+  trBase.innerHTML = `<td style="font-weight:500">Prevalenza base H<sub>0</sub></td>`+
+                     `<td style="font-weight:500">${H_base_m.toFixed(2)} m c.a.  ·  ${dp_base_kpa.toFixed(1)} kPa</td>`+
+                     `<td style="color:var(--text2)">Resistenze + margine ${tipoC==='aperto'?'+ geodetico':''}</td>`;
+  ptb.appendChild(trBase);
+
+  // Riga maggiorazione +10%
+  const trUp = document.createElement('tr');
+  if (upliftOn) {
+    trUp.innerHTML = `<td style="color:var(--warn)">Maggiorazione +10%</td>`+
+                     `<td style="color:var(--warn);font-weight:500">+${(H_tot_m-H_base_m).toFixed(2)} m  ·  +${(dp_pompa_kpa-dp_base_kpa).toFixed(1)} kPa</td>`+
+                     `<td style="color:var(--text2)">Perdite non considerate (cautelativo)</td>`;
+  } else {
+    trUp.innerHTML = `<td style="color:var(--text2)">Maggiorazione +10%</td>`+
+                     `<td style="color:var(--text2)">disattivata</td>`+
+                     `<td style="color:var(--text2)">Spuntare la casella per attivarla</td>`;
+  }
+  ptb.appendChild(trUp);
+
+  // Riga totale evidenziata
+  const trTot = document.createElement('tr');
+  trTot.innerHTML = `<td style="color:var(--accent);font-weight:600">PREVALENZA RICHIESTA H</td>`+
+                    `<td style="color:var(--accent);font-weight:600">${H_tot_m.toFixed(2)} m c.a.  ·  ${dp_pompa_kpa.toFixed(1)} kPa</td>`+
+                    `<td style="color:var(--text2)">Punto di lavoro: Q = ${Q_m3h.toFixed(2)} m³/h</td>`;
+  ptb.appendChild(trTot);
+
+  // Nota sotto l'opbox prevalenza
+  const hnote = document.getElementById('po_h_note');
+  hnote.innerHTML = upliftOn
+    ? `H<sub>0</sub> = ${H_base_m.toFixed(2)} m &nbsp;→&nbsp; +10% &nbsp;→&nbsp; <strong>${H_tot_m.toFixed(2)} m</strong>`
+    : `+10% non applicato (H<sub>0</sub> = H)`;
+
+  // ── Suggerimento classe di macchina ──
+  let tipoMacchina, norma, modalita;
+  if (Q_m3h <= 3 && H_tot_m <= 8) {
+    tipoMacchina = 'Circolatore a rotore bagnato (wet-rotor) ad alta efficienza, attacco filettato.';
+    norma = 'Reg. UE 641/2009 e 622/2012 (ErP): EEI ≤ 0,20, velocità variabile obbligatoria.';
+    modalita = 'Modalità Δp variabile (proporzionale) consigliata su impianti con valvole termostatiche.';
+  } else if (Q_m3h <= 10 && H_tot_m <= 12) {
+    tipoMacchina = 'Circolatore a rotore bagnato di media potenza o coppia gemellare (pompe in parallelo con riserva attiva).';
+    norma = 'Reg. UE 641/2009 e 622/2012 (ErP): EEI ≤ 0,23 / 0,20, regolazione elettronica.';
+    modalita = 'Δp costante per circuiti a portata stabile; Δp variabile per regolazione modulante.';
+  } else {
+    tipoMacchina = 'Pompa a rotore secco (in-line o monoblocco) con motore a inverter; valutare configurazione gemellare per ridondanza.';
+    norma = 'Reg. UE 547/2012 (water pumps): MEI ≥ 0,40; motore IE3/IE4 (Reg. UE 2019/1781).';
+    modalita = 'Inverter con controllo a Δp costante e curva del circuito verificata sul punto di lavoro.';
+  }
+
+  let avvisi = '';
+  if (eta_p > 0.65 && P_idr < 200) {
+    avvisi += '<div style="color:var(--warn);margin-top:6px">⚠ Per potenze idrauliche piccole (&lt; 200 W) il rendimento reale dei circolatori è spesso 0,20–0,35: il valore di η impostato potrebbe essere ottimistico.</div>';
+  }
+  if (H_tot_m > 12 && Q_m3h <= 3) {
+    avvisi += '<div style="color:var(--warn);margin-top:6px">⚠ Prevalenza elevata con portata modesta: verificare di non aver sovrastimato le ΔP o il margine.</div>';
+  }
+
+  document.getElementById('pump-suggest').style.display = 'block';
+  document.getElementById('pump-suggest').querySelector('.stitle').textContent = 'Classe di macchina suggerita';
+  document.getElementById('pump-suggest-body').innerHTML =
+    `<div><strong style="color:var(--text)">→ ${tipoMacchina}</strong></div>`+
+    `<div style="color:var(--text2);margin-top:6px">${norma}</div>`+
+    `<div style="color:var(--text2);margin-top:4px">${modalita}</div>`+
+    `<div style="color:var(--text2);margin-top:6px">Cercare a catalogo una pompa la cui curva caratteristica passi appena sopra il punto <strong style="color:var(--accent)">(${Q_m3h.toFixed(2)} m³/h ; ${H_tot_m.toFixed(2)} m)</strong>, evitando di sovradimensionare (rumore, usura, consumi).</div>`+
+    avvisi;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INIT — aggiungi una riga di default per ciascuna sezione
 // ═══════════════════════════════════════════════════════════════
 aggiornaTaglie();
 addRow('curve');
 addRow('valvole');
+populateModelli();
+toggleGeo();
+toggleMode();
 </script>
 </body>
 </html>
